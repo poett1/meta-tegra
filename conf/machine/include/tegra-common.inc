@@ -15,7 +15,9 @@ UBOOT_EXTLINUX_INITRD ?= "${@d.getVar('L4T_EXTLINUX_BASEDIR') + '/initrd' if d.g
 
 NVIDIA_BOARD ?= "generic"
 
-TEGRA_BOOTCONTROL_OVERLAYS ?= "L4TConfiguration.dtbo"
+TEGRA_UEFI_MINIMAL ?= "0"
+TEGRA_BOOTCONTROL_MINIMAL_UEFI ?= "${@'BootOrderEmmc.dtbo' if bb.utils.to_boolean(d.getVar('TEGRA_UEFI_MINIMAL')) else ''}"
+TEGRA_BOOTCONTROL_OVERLAYS ?= "L4TConfiguration.dtbo ${TEGRA_BOOTCONTROL_MINIMAL_UEFI}"
 TEGRA_BOOTCONTROL_OVERLAYS += "${@'L4TConfiguration-RootfsRedundancyLevelABEnable.dtbo' if bb.utils.to_boolean(d.getVar('USE_REDUNDANT_FLASH_LAYOUT')) else ''}"
 TEGRA_PLUGIN_MANAGER_OVERLAYS ??= ""
 # The following variable is deprecated; add new overlays
@@ -31,6 +33,8 @@ PREFERRED_PROVIDER_virtual/dtb ?= "nvidia-kernel-oot-dtb"
 PREFERRED_PROVIDER_virtual/bootloader ?= "edk2-firmware-tegra"
 OPTEE_MM_PROVIDER = "${@'tegra-uefi-prebuilt' if d.getVar('PREFERRED_PROVIDER_virtual/bootloader') == 'tegra-uefi-prebuilt' else 'standalone-mm-optee-tegra'}"
 PREFERRED_PROVIDER_standalone-mm-optee-tegra ?= "${OPTEE_MM_PROVIDER}"
+EDK2_FIRMWARE_TEGRA_MINIMAL = "${@'tegra-uefi-prebuilt' if d.getVar('PREFERRED_PROVIDER_virtual/bootloader') == 'tegra-uefi-prebuilt' else 'edk2-firmware-tegra-minimal'}"
+PREFERRED_PROVIDER_edk2-firmware-tegra-minimal = "${EDK2_FIRMWARE_TEGRA_MINIMAL}"
 TEGRA_LIBGLVND_PROVIDER ?= "libglvnd"
 PREFERRED_PROVIDER_libglvnd = "${TEGRA_LIBGLVND_PROVIDER}"
 PREFERRED_PROVIDER_virtual/egl = "${PREFERRED_PROVIDER_libglvnd}"
@@ -123,14 +127,6 @@ TEGRA_FLASHVAR_TBCDTB_FILE ?= "@DTBFILE@"
 TEGRA_FLASH_CHECK_VARS ?= "BOARDID BOARDSKU"
 TEGRA_FLASH_CHECK_BOARDID ?= "${TEGRA_BOARDID}"
 TEGRA_FLASH_CHECK_BOARDSKU ?= "${TEGRA_BOARDSKU}"
-
-# For more information on UEFI configurations, see the edk2-nvidia
-# sources.
-TEGRA_EDK2_CONFIGURATION ?= "general"
-TEGRA_FLASHVAR_UEFI_IMAGE ?= "uefi_${TEGRA_EDK2_PLATFORM}_${TEGRA_EDK2_CONFIGURATION}"
-TEGRA_RCM_EDK2_CONFIGURATION ?= "embedded"
-TEGRA_FLASHVAR_RCM_UEFI_IMAGE ?= "uefi_${TEGRA_EDK2_PLATFORM}_rcmboot"
-TEGRA_RCM_EDK2_DEPENDS ?= "edk2-firmware-tegra-rcmboot:do_deploy"
 
 EMMC_BCTS ?= "${EMMC_BCT}${@',' + d.getVar('EMMC_BCT_OVERRIDE') if d.getVar('EMMC_BCT_OVERRIDE') else ''}"
 
